@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class KnightsTour {
 
@@ -78,5 +79,46 @@ public class KnightsTour {
             visited[nr][nc] = false;
         }
         return false;
+    }
+
+    static void printTour(int[] tour) {
+        int width = String.valueOf(ROWS * COLS).length();
+        int[][] board = new int[ROWS][COLS];
+        for (int i = 0; i < tour.length; i++)
+            board[tour[i] / COLS][tour[i] % COLS] = i + 1;
+        for (int[] row : board) {
+            for (int v : row)
+                System.out.printf("%" + width + "d ", v);
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter rows and cols: ");
+        ROWS = sc.nextInt();
+        COLS = sc.nextInt();
+
+        boolean[][] visited = new boolean[ROWS][COLS];
+        int[] tour = warnsdorff(visited);
+
+        if (tour != null) {
+            System.out.println("Tour found (Warnsdorff):");
+            printTour(tour);
+            return;
+        }
+
+        path = new int[ROWS * COLS];
+        path[0] = 0;
+        iters = 0;
+        visited = new boolean[ROWS][COLS];
+        visited[0][0] = true;
+
+        if (backtrack(0, 0, 1, visited)) {
+            System.out.println("Tour found (backtracking):");
+            printTour(path);
+        } else {
+            System.out.println("No knight's tour exists on a " + ROWS + "x" + COLS + " board.");
+        }
     }
 }
