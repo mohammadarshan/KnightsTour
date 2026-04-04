@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class KnightsTour {
 
     static final int[][] MOVES = {
@@ -6,6 +8,9 @@ public class KnightsTour {
     };
 
     static int ROWS, COLS;
+    static int[] path;
+    static int iters;
+    static final int MAX_ITERS = 4_000_000;
 
     static boolean inBounds(int r, int c) {
         return r >= 0 && r < ROWS && c >= 0 && c < COLS;
@@ -46,5 +51,32 @@ public class KnightsTour {
             c = bestC;
         }
         return tour;
+    }
+
+    static boolean backtrack(int r, int c, int step, boolean[][] visited) {
+        if (iters++ > MAX_ITERS)
+            return false;
+        if (step == ROWS * COLS)
+            return true;
+
+        int[][] candidates = new int[8][3];
+        int count = 0;
+        for (int[] m : MOVES) {
+            int nr = r + m[0], nc = c + m[1];
+            if (inBounds(nr, nc) && !visited[nr][nc])
+                candidates[count++] = new int[] { nr, nc, degree(nr, nc, visited) };
+        }
+        Arrays.sort(candidates, 0, count,
+                (a, b) -> a[2] != b[2] ? a[2] - b[2] : (a[0] * COLS + a[1]) - (b[0] * COLS + b[1]));
+
+        for (int i = 0; i < count; i++) {
+            int nr = candidates[i][0], nc = candidates[i][1];
+            visited[nr][nc] = true;
+            path[step] = nr * COLS + nc;
+            if (backtrack(nr, nc, step + 1, visited))
+                return true;
+            visited[nr][nc] = false;
+        }
+        return false;
     }
 }
