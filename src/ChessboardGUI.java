@@ -2,9 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Swing GUI that renders an m×n chessboard with alternating
- * light and dark squares.  Board dimensions are supplied via
- * an input dialog — the same two integers the console solver accepts.
+ * Swing GUI that draws an m x n chessboard with alternating
+ * light and dark squares. It also shows the move numbers
+ * from a completed Knight's Tour on top of each square.
  */
 public class ChessboardGUI extends JFrame {
 
@@ -14,10 +14,15 @@ public class ChessboardGUI extends JFrame {
 
     private final int rows;
     private final int cols;
+    /** Move number for each cell. moveAt[r][c] gives the 1-based visit order. */
+    private final int[][] moveAt;
 
-    public ChessboardGUI(int rows, int cols) {
+    public ChessboardGUI(int rows, int cols, int[] tour) {
         this.rows = rows;
         this.cols = cols;
+        this.moveAt = new int[rows][cols];
+        for (int i = 0; i < tour.length; i++)
+            moveAt[tour[i] / cols][tour[i] % cols] = i + 1;
 
         setTitle("Knight's Tour \u2013 " + rows + "\u00d7" + cols);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -37,13 +42,55 @@ public class ChessboardGUI extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            Font font = new Font("SansSerif", Font.BOLD, CELL_SIZE / 3);
+            g2.setFont(font);
+            FontMetrics fm = g2.getFontMetrics();
+
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    g.setColor((r + c) % 2 == 0 ? LIGHT : DARK);
-                    g.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    boolean light = (r + c) % 2 == 0;
+                    g2.setColor(light ? LIGHT : DARK);
+                    g2.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+                    if (moveAt[r][c] > 0) {
+                        String num = String.valueOf(moveAt[r][c]);
+                        int tx = c * CELL_SIZE + (CELL_SIZE - fm.stringWidth(num)) / 2;
+                        int ty = r * CELL_SIZE + (CELL_SIZE - fm.getHeight()) / 2
+                                + fm.getAscent();
+                        g2.setColor(light ? DARK : LIGHT);
+                        g2.drawString(num, tx, ty);
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Runs the solver and returns a tour. Returns null if no tour exists.
+     */
+    private static int[] solve(int rows, int cols) {
+        KnightsTour.ROWS = rows;
+        KnightsTour.COLS = cols;
+
+        boolean[][] visited = new boolean[rows][cols];
+        int[] tour = KnightsTour.warnsdorff(visited);
+        if (tour != null)
+            return tour;
+
+        KnightsTour.path = new int[rows * cols];
+        KnightsTour.path[0] = 0;
+        KnightsTour.iters = 0;
+        visited = new boolean[rows][cols];
+        visited[0][0] = true;
+
+        if (KnightsTour.backtrack(0, 0, 1, visited))
+            return KnightsTour.path;
+
+        return null;
     }
 
     public static void main(String[] args) {
@@ -63,7 +110,15 @@ public class ChessboardGUI extends JFrame {
 
         int rows = Integer.parseInt(parts[0]);
         int cols = Integer.parseInt(parts[1]);
+        int[] tour = solve(rows, cols);
 
-        SwingUtilities.invokeLater(() -> new ChessboardGUI(rows, cols).setVisible(true));
+        if (tour == null) {
+            JOptionPane.showMessageDialog(null,
+                    "No knight's tour exists on a " + rows + "\u00d7" + cols + " board.",
+                    "No Solution", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> new ChessboardGUI(rows, cols, tour).setVisible(true));
     }
 }
