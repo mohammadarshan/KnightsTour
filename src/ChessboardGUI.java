@@ -16,6 +16,9 @@ public class ChessboardGUI extends JFrame {
     private final int cols;
     /** Move number for each cell. moveAt[r][c] gives the 1-based visit order. */
     private final int[][] moveAt;
+    /** Row and column where the knight is currently placed. */
+    private int knightRow;
+    private int knightCol;
 
     public ChessboardGUI(int rows, int cols, int[] tour) {
         this.rows = rows;
@@ -23,6 +26,10 @@ public class ChessboardGUI extends JFrame {
         this.moveAt = new int[rows][cols];
         for (int i = 0; i < tour.length; i++)
             moveAt[tour[i] / cols][tour[i] % cols] = i + 1;
+
+        // Place the knight at the first square of the tour
+        this.knightRow = tour[0] / cols;
+        this.knightCol = tour[0] % cols;
 
         setTitle("Knight's Tour \u2013 " + rows + "\u00d7" + cols);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -66,6 +73,18 @@ public class ChessboardGUI extends JFrame {
                     }
                 }
             }
+
+            // Draw the knight symbol on its current square
+            Font knightFont = new Font("Serif", Font.PLAIN, (int) (CELL_SIZE * 0.7));
+            g2.setFont(knightFont);
+            FontMetrics kfm = g2.getFontMetrics();
+            String knight = "\u265E";
+            int kx = knightCol * CELL_SIZE + (CELL_SIZE - kfm.stringWidth(knight)) / 2;
+            int ky = knightRow * CELL_SIZE + (CELL_SIZE - kfm.getHeight()) / 2
+                    + kfm.getAscent();
+            boolean knightOnLight = (knightRow + knightCol) % 2 == 0;
+            g2.setColor(knightOnLight ? new Color(40, 40, 40) : new Color(255, 255, 255));
+            g2.drawString(knight, kx, ky);
         }
     }
 
