@@ -94,10 +94,11 @@ public class KnightsTour {
     }
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Enter rows and cols: ");
-        ROWS = sc.nextInt();
-        COLS = sc.nextInt();
+        try (Scanner sc = new Scanner(System.in)) {
+            System.out.print("Enter rows and cols: ");
+            ROWS = sc.nextInt();
+            COLS = sc.nextInt();
+        }
 
         boolean[][] visited = new boolean[ROWS][COLS];
         int[] tour = warnsdorff(visited);
