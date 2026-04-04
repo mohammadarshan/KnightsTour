@@ -22,6 +22,8 @@ public class ChessboardGUI extends JFrame {
     private int currentStep;
 
     private final BoardPanel boardPanel;
+    private final Timer autoPlayTimer;
+    private JButton autoPlayBtn;
 
     public ChessboardGUI(int rows, int cols, int[] tour) {
         this.rows = rows;
@@ -38,18 +40,35 @@ public class ChessboardGUI extends JFrame {
         setResizable(false);
 
         boardPanel = new BoardPanel();
+
+        // Timer advances one step per tick and stops at the end
+        autoPlayTimer = new Timer(300, e -> {
+            if (currentStep < tour.length - 1) {
+                currentStep++;
+                boardPanel.repaint();
+            } else {
+                stopAutoPlay();
+            }
+        });
         add(boardPanel, BorderLayout.CENTER);
         add(createControlPanel(), BorderLayout.SOUTH);
         pack();
         setLocationRelativeTo(null);
     }
 
+    private void stopAutoPlay() {
+        autoPlayTimer.stop();
+        autoPlayBtn.setText("\u25B6 Auto-Play");
+    }
+
     private JPanel createControlPanel() {
         JButton prevBtn  = new JButton("\u25C0 Previous");
         JButton nextBtn  = new JButton("Next \u25B6");
         JButton resetBtn = new JButton("Reset");
+        autoPlayBtn      = new JButton("\u25B6 Auto-Play");
 
         prevBtn.addActionListener(e -> {
+            stopAutoPlay();
             if (currentStep > 0) {
                 currentStep--;
                 boardPanel.repaint();
@@ -57,6 +76,7 @@ public class ChessboardGUI extends JFrame {
         });
 
         nextBtn.addActionListener(e -> {
+            stopAutoPlay();
             if (currentStep < tour.length - 1) {
                 currentStep++;
                 boardPanel.repaint();
@@ -64,14 +84,44 @@ public class ChessboardGUI extends JFrame {
         });
 
         resetBtn.addActionListener(e -> {
+            stopAutoPlay();
             currentStep = 0;
             boardPanel.repaint();
         });
 
-        JPanel panel = new JPanel();
-        panel.add(prevBtn);
-        panel.add(resetBtn);
-        panel.add(nextBtn);
+        autoPlayBtn.addActionListener(e -> {
+            if (autoPlayTimer.isRunning()) {
+                stopAutoPlay();
+            } else {
+                // If already at the end, restart from the beginning
+                if (currentStep >= tour.length - 1)
+                    currentStep = 0;
+                autoPlayBtn.setText("\u23F8 Pause");
+                autoPlayTimer.start();
+            }
+        });
+
+        // Speed slider: left is slow (800ms), right is fast (50ms)
+        JSlider speedSlider = new JSlider(50, 800, 300);
+        speedSlider.setInverted(true);
+        speedSlider.setPreferredSize(new Dimension(120, 26));
+        speedSlider.addChangeListener(e ->
+                autoPlayTimer.setDelay(speedSlider.getValue()));
+
+        JPanel buttons = new JPanel();
+        buttons.add(prevBtn);
+        buttons.add(resetBtn);
+        buttons.add(nextBtn);
+        buttons.add(autoPlayBtn);
+
+        JPanel speedPanel = new JPanel();
+        speedPanel.add(new JLabel("Slow"));
+        speedPanel.add(speedSlider);
+        speedPanel.add(new JLabel("Fast"));
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(buttons, BorderLayout.CENTER);
+        panel.add(speedPanel, BorderLayout.SOUTH);
         return panel;
     }
 
