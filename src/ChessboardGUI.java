@@ -3,8 +3,9 @@ import java.awt.*;
 
 /**
  * Swing GUI that draws an m x n chessboard and lets you step
- * through a completed Knight's Tour one move at a time using
- * Next, Previous, and Reset buttons.
+ * through a completed Knight's Tour one move at a time.
+ * Board dimensions can be changed at any time from the input
+ * panel at the top. Errors are shown inside the GUI.
  */
 public class ChessboardGUI extends JFrame {
 
@@ -12,30 +13,23 @@ public class ChessboardGUI extends JFrame {
     private static final Color DARK  = new Color(181, 136, 99);
     private static final int CELL_SIZE = 60;
 
-    private final int rows;
-    private final int cols;
-    /** Full tour from the solver. tour[i] is the board index visited at step i. */
-    private final int[] tour;
+    /** Current board dimensions. Updated when a new tour is loaded. */
+    private int rows;
+    private int cols;
+    /** Full tour from the solver. Null if no tour is loaded. */
+    private int[] tour;
     /** Move number for each cell. moveAt[r][c] gives the 1-based visit order. */
-    private final int[][] moveAt;
+    private int[][] moveAt;
     /** How far we have stepped through the tour (0-based index into tour). */
     private int currentStep;
 
     private final BoardPanel boardPanel;
     private final Timer autoPlayTimer;
     private JButton autoPlayBtn;
+    private JLabel errorLabel;
 
-    public ChessboardGUI(int rows, int cols, int[] tour) {
-        this.rows = rows;
-        this.cols = cols;
-        this.tour = tour;
-        this.currentStep = 0;
-
-        this.moveAt = new int[rows][cols];
-        for (int i = 0; i < tour.length; i++)
-            moveAt[tour[i] / cols][tour[i] % cols] = i + 1;
-
-        setTitle("Knight's Tour - " + rows + "x" + cols);
+    public ChessboardGUI() {
+        setTitle("Knight's Tour");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
@@ -43,33 +37,113 @@ public class ChessboardGUI extends JFrame {
 
         // Timer advances one step per tick and stops at the end
         autoPlayTimer = new Timer(300, e -> {
-            if (currentStep < tour.length - 1) {
+            if (tour != null && currentStep < tour.length - 1) {
                 currentStep++;
                 boardPanel.repaint();
             } else {
                 stopAutoPlay();
             }
         });
+
+        add(createInputPanel(), BorderLayout.NORTH);
         add(boardPanel, BorderLayout.CENTER);
         add(createControlPanel(), BorderLayout.SOUTH);
+
+        // Start with a default 8x8 board
+        loadTour(8, 8);
+    }
+
+    /**
+     * Validates the given dimensions, runs the solver, and refreshes
+     * the board. Shows an error message if something goes wrong.
+     */
+    private void loadTour(int newRows, int newCols) {
+        stopAutoPlay();
+        errorLabel.setText(" ");
+
+        if (newRows < 1 || newCols < 1) {
+            showError("Rows and columns must be at least 1.");
+            return;
+        }
+
+        int[] result = solve(newRows, newCols);
+        if (result == null) {
+            showError("No knight's tour exists on a " + newRows + "x" + newCols + " board.");
+            return;
+        }
+
+        this.rows = newRows;
+        this.cols = newCols;
+        this.tour = result;
+        this.currentStep = 0;
+        this.moveAt = new int[rows][cols];
+        for (int i = 0; i < tour.length; i++)
+            moveAt[tour[i] / cols][tour[i] % cols] = i + 1;
+
+        setTitle("Knight's Tour - " + rows + "x" + cols);
+        boardPanel.setPreferredSize(new Dimension(cols * CELL_SIZE, rows * CELL_SIZE));
         pack();
         setLocationRelativeTo(null);
+        boardPanel.repaint();
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setForeground(new Color(180, 30, 30));
+    }
+
+    private JPanel createInputPanel() {
+        JTextField rowsField = new JTextField("8", 3);
+        JTextField colsField = new JTextField("8", 3);
+        JButton startBtn = new JButton("Start");
+        errorLabel = new JLabel(" ");
+
+        startBtn.addActionListener(e -> {
+            String rowText = rowsField.getText().trim();
+            String colText = colsField.getText().trim();
+
+            int r, c;
+            try {
+                r = Integer.parseInt(rowText);
+                c = Integer.parseInt(colText);
+            } catch (NumberFormatException ex) {
+                showError("Please enter valid integers for rows and columns.");
+                return;
+            }
+
+            loadTour(r, c);
+        });
+
+        JPanel fields = new JPanel();
+        fields.add(new JLabel("Rows:"));
+        fields.add(rowsField);
+        fields.add(new JLabel("Cols:"));
+        fields.add(colsField);
+        fields.add(startBtn);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(fields, BorderLayout.CENTER);
+        panel.add(errorLabel, BorderLayout.SOUTH);
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        return panel;
     }
 
     private void stopAutoPlay() {
         autoPlayTimer.stop();
-        autoPlayBtn.setText("\u25B6 Auto-Play");
+        if (autoPlayBtn != null)
+            autoPlayBtn.setText("Auto-Play");
     }
 
     private JPanel createControlPanel() {
-        JButton prevBtn  = new JButton("\u25C0 Previous");
-        JButton nextBtn  = new JButton("Next \u25B6");
+        JButton prevBtn  = new JButton("<< Previous");
+        JButton nextBtn  = new JButton("Next >>");
         JButton resetBtn = new JButton("Reset");
-        autoPlayBtn      = new JButton("\u25B6 Auto-Play");
+        autoPlayBtn      = new JButton("Auto-Play");
 
         prevBtn.addActionListener(e -> {
             stopAutoPlay();
-            if (currentStep > 0) {
+            if (tour != null && currentStep > 0) {
                 currentStep--;
                 boardPanel.repaint();
             }
@@ -77,7 +151,7 @@ public class ChessboardGUI extends JFrame {
 
         nextBtn.addActionListener(e -> {
             stopAutoPlay();
-            if (currentStep < tour.length - 1) {
+            if (tour != null && currentStep < tour.length - 1) {
                 currentStep++;
                 boardPanel.repaint();
             }
@@ -90,13 +164,14 @@ public class ChessboardGUI extends JFrame {
         });
 
         autoPlayBtn.addActionListener(e -> {
+            if (tour == null) return;
             if (autoPlayTimer.isRunning()) {
                 stopAutoPlay();
             } else {
                 // If already at the end, restart from the beginning
                 if (currentStep >= tour.length - 1)
                     currentStep = 0;
-                autoPlayBtn.setText("\u23F8 Pause");
+                autoPlayBtn.setText("Pause");
                 autoPlayTimer.start();
             }
         });
@@ -128,12 +203,14 @@ public class ChessboardGUI extends JFrame {
     private class BoardPanel extends JPanel {
 
         BoardPanel() {
-            setPreferredSize(new Dimension(cols * CELL_SIZE, rows * CELL_SIZE));
+            setPreferredSize(new Dimension(8 * CELL_SIZE, 8 * CELL_SIZE));
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
+            if (tour == null) return;
+
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
@@ -204,31 +281,6 @@ public class ChessboardGUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        String input = JOptionPane.showInputDialog(null,
-                "Enter rows and columns (e.g. 8 5):", "Board Size",
-                JOptionPane.QUESTION_MESSAGE);
-        if (input == null || input.trim().isEmpty())
-            return;
-
-        String[] parts = input.trim().split("\\s+");
-        if (parts.length < 2) {
-            JOptionPane.showMessageDialog(null,
-                    "Please enter two integers separated by a space.",
-                    "Invalid Input", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        int rows = Integer.parseInt(parts[0]);
-        int cols = Integer.parseInt(parts[1]);
-        int[] tour = solve(rows, cols);
-
-        if (tour == null) {
-            JOptionPane.showMessageDialog(null,
-                    "No knight's tour exists on a " + rows + "\u00d7" + cols + " board.",
-                    "No Solution", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        SwingUtilities.invokeLater(() -> new ChessboardGUI(rows, cols, tour).setVisible(true));
+        SwingUtilities.invokeLater(() -> new ChessboardGUI().setVisible(true));
     }
 }
