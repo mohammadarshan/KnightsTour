@@ -13,7 +13,7 @@ A Java application that solves the Knight's Tour problem and visualizes the solu
 ### Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/knights-tour.git
+git clone https://github.com/mohammadarshan/knights-tour.git
 cd knights-tour/KnightsTour/src
 ```
 
