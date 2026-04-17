@@ -2,6 +2,11 @@ import java.awt.Color;
 
 /**
  * Shared color and sizing constants used across the GUI.
+ * 
+ * @author Abhishek Amkamgari - GUI Implementation
+ * @author Kavitha Raavi - Documentation and Refactoring
+ * @version 1.1
+ * @since 1.0
  */
 public final class Theme {
 
