@@ -5,6 +5,11 @@ import java.awt.*;
  * Custom JPanel that draws the chessboard grid, move numbers,
  * and the knight piece. Reads all tour state from the parent
  * ChessboardGUI instance.
+ * 
+ * @author Abhishek Amkamgari - GUI Implementation
+ * @author Kavitha Raavi - Documentation and Refactoring
+ * @version 1.1
+ * @since 1.0
  */
 public class BoardPanel extends JPanel {
 
@@ -53,8 +58,8 @@ public class BoardPanel extends JPanel {
                 int x = ox + c * cellSize;
                 int y = oy + r * cellSize;
 
-                boolean light = (r + c) % 2 == 0;
-                g2.setColor(light ? Theme.LIGHT_SQUARE : Theme.DARK_SQUARE);
+                boolean isLightSquare = (r + c) % 2 == 0;
+                g2.setColor(isLightSquare ? Theme.LIGHT_SQUARE : Theme.DARK_SQUARE);
                 g2.fillRect(x, y, cellSize, cellSize);
 
                 // Only show the number on squares the knight has already left
@@ -63,7 +68,7 @@ public class BoardPanel extends JPanel {
                     String num = String.valueOf(move);
                     int tx = x + (cellSize - fm.stringWidth(num)) / 2;
                     int ty = y + (cellSize - fm.getHeight()) / 2 + fm.getAscent();
-                    g2.setColor(light ? Theme.DARK_SQUARE : Theme.LIGHT_SQUARE);
+                    g2.setColor(isLightSquare ? Theme.DARK_SQUARE : Theme.LIGHT_SQUARE);
                     g2.drawString(num, tx, ty);
                 }
             }

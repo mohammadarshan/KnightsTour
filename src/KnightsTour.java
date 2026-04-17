@@ -18,6 +18,11 @@ import java.util.Scanner;
  * overhead — cache locality is better on a contiguous array than on an
  * array-of-arrays whose rows may be scattered in the heap.
  * </p>
+ * 
+ * @author Mohammad Arshan Shaikh - Core Implementation
+ * @author Kavitha Raavi - Documentation and Refactoring
+ * @version 1.1
+ * @since 1.0
  */
 public class KnightsTour {
 
@@ -82,11 +87,11 @@ public class KnightsTour {
      * @return number of valid onward moves from (r, c)
      */
     static int degree(int r, int c, boolean[][] visited) {
-        int count = 0;
+        int validMoves = 0;
         for (int[] m : MOVES)
             if (inBounds(r + m[0], c + m[1]) && !visited[r + m[0]][c + m[1]])
-                count++;
-        return count;
+                validMoves++;
+        return validMoves;
     }
 
     /**
@@ -100,6 +105,7 @@ public class KnightsTour {
      * backtracking.
      * </p>
      *
+     * @see <a href="https://en.wikipedia.org/wiki/Knight%27s_tour#Warnsdorff's_rule">Warnsdorff's Rule</a>
      * @param visited empty visit grid (all {@code false}); mutated in place
      * @return a complete tour as an array of board indices, or {@code null}
      *         if the heuristic gets stuck before visiting all squares

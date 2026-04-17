@@ -6,6 +6,11 @@ import java.awt.*;
  * Main frame that wires together the input panel, board panel,
  * and playback controls. Holds the current tour state and exposes
  * it through getters so that BoardPanel can read it during painting.
+ * 
+ * @author Abhishek Amkamgari - GUI Implementation
+ * @author Kavitha Raavi - Documentation and Refactoring
+ * @version 1.1
+ * @since 1.0
  */
 public class ChessboardGUI extends JFrame {
 
@@ -72,8 +77,8 @@ public class ChessboardGUI extends JFrame {
         stopAutoPlay();
         errorLabel.setText(" ");
 
-        if (newRows < 1 || newCols < 1) {
-            showError("Rows and columns must be at least 1.");
+        if (newRows <= 0 || newCols <= 0) {
+            showError("Rows and columns must be strictly positive integers.");
             return;
         }
 

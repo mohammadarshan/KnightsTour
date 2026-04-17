@@ -10,6 +10,11 @@ public final class TourSolver {
      * Solves the Knight's Tour for the given board size.
      * Returns the tour as an array of board indices in visit order,
      * or null if no solution was found.
+     * 
+     * @author Mohammad Arshan Shaikh - Core Implementation
+     * @author Kavitha Raavi - Documentation and Refactoring
+     * @version 1.1
+     * @since 1.0
      */
     public static int[] solve(int rows, int cols) {
         KnightsTour.ROWS = rows;
