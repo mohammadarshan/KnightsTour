@@ -72,3 +72,14 @@ Example output for a 5x5 board:
 ## Third-Party Libraries
 
 None. The project uses only the Java standard library (Swing, AWT).
+
+## Authors
+
+- **Abhishek Goud Amkamgari** - GUI Implementation and Theme mapping
+- **Mohammad Arshan Shaikh** - Core Algorithm & Solver Implementation
+- **Kavitha Raavi** - Documentation, Refactoring, and Citations
+
+## Citations
+
+- Algorithms and heuristics inspired by [Warnsdorff's Rule (Wikipedia)](https://en.wikipedia.org/wiki/Knight%27s_tour#Warnsdorff's_rule).
+- Chess piece unicode mappings referenced from [Wikipedia's Chess symbols in Unicode](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode).
